@@ -38,12 +38,12 @@ function loadTransactions() {
         transactionList.innerHTML = '<p class="no-transactions">No transactions yet</p>';
         return;
     }
-
     transactionList.innerHTML = transactions.map(txn => `
         <div class="transaction-item">
             <div class="transaction-info">
                 <div class="transaction-type">${txn.type || 'Transfer'}</div>
                 <div class="transaction-date">${txn.timestamp}</div>
+                <div class="transaction-token">Token: ${txn.token || ''}</div>
             </div>
             <div class="transaction-amount">${formatCurrency(txn.amount)}</div>
             <div class="transaction-status ${txn.status ? txn.status.toLowerCase() : 'completed'}">
@@ -69,7 +69,7 @@ function getTransactions() {
 }
 
 function formatCurrency(amount) {
-    return '£' + parseInt(amount).toLocaleString('en-IN');
+    return '₹' + parseInt(amount).toLocaleString('en-IN');
 }
 
 function cancelTransaction(transactionId) {

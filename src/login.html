@@ -10,18 +10,25 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <img src="assets/logo.svg" alt="Company Logo">
-        </div>
+                <h2>ABC mobile Banking</h2>
+            </div>
         <div class="login-form">
             <h2>Login</h2>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="role">Your Role:</label>
+                    <select id="role" name="role">
+                        <option value="customer" selected>Customer</option>
+                        <option value="cashier">Cashier</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="username">Username (enter yourname)</label>
+                    <input type="text" id="username" name="username" placeholder="yourname" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password (enter yourname)</label>
+                    <input type="password" id="password" name="password" placeholder="yourname" required>
                 </div>
                 <button type="submit" id="loginButton">Login</button>
             </form>

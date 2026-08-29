@@ -22,12 +22,12 @@ function setCurrentUsername(username) {
 
 // Format amount to INR currency
 function formatCurrency(amount) {
-    return '£' + parseInt(amount).toLocaleString('en-IN');
+    return '₹' + parseInt(amount).toLocaleString('en-IN');
 }
 
-// Convert number to words (British format)
+// Convert number to words (Indian Rupees format)
 function numberToWords(num) {
-    if (num === 0) return 'Zero Pounds Only';
+    if (num === 0) return 'Zero Rupees Only';
 
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -93,21 +93,29 @@ function numberToWords(num) {
         }
     }
 
-    return (words.trim() || 'Zero') + ' Pounds Only';
+    return (words.trim() || 'Zero') + ' Rupees Only';
 }
 
 // Generate token number
+// Generate token number between 101 and 999 (sequential)
 function generateTokenNumber() {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    return 'NW' + timestamp.toString().slice(-6) + random.toString().padStart(4, '0');
+    let counter = parseInt(localStorage.getItem('tokenCounter') || '100', 10);
+    counter++;
+    if (counter > 999) counter = 101;
+    localStorage.setItem('tokenCounter', counter.toString());
+    return counter.toString();
 }
 
 // Save transaction to localStorage
 function saveTransaction(transaction) {
     let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-    transaction.id = generateTokenNumber();
+    // If transaction already has a token, use it; otherwise generate
+    const token = transaction.token || generateTokenNumber();
+    transaction.token = token;
+    transaction.id = token + '-' + Date.now();
     transaction.timestamp = new Date().toLocaleString();
+    // Default status for customer-submitted txns is Pending for cashier processing
+    transaction.status = transaction.status || 'Pending';
     transactions.push(transaction);
     localStorage.setItem('transactions', JSON.stringify(transactions));
     return transaction.id;

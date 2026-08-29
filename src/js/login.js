@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
+            const roleEl = document.getElementById('role');
+            const role = roleEl ? roleEl.value : 'customer';
             
             // Validation
             if (!username || !password) {
@@ -21,15 +23,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            if (password.length < 4) {
-                alert('Password must be at least 4 characters long');
+            // For this app both username and password should be the same "yourname"
+            if (username !== password) {
+                alert('Username and Password must match and be your name');
                 return;
             }
             
-            // Store username and redirect to dashboard
+            // Store username and redirect based on role
             setCurrentUsername(username);
             alert('Login successful! Welcome ' + username);
-            window.location.href = 'dashboard.html';
+            if (role === 'cashier') {
+                window.location.href = 'cashier.html';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
         });
     }
 });

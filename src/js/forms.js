@@ -119,7 +119,7 @@ function handleSave() {
     const totalAmountInput = document.getElementById('totalAmount');
     const totalAmount = totalAmountInput.value;
 
-    if (totalAmount === '£0' || totalAmount === '') {
+    if (totalAmount === '₹0' || totalAmount === '') {
         alert('Please enter an amount before saving');
         return;
     }
@@ -167,13 +167,12 @@ function handleFinalSave() {
         return;
     }
 
-    // Generate token
+    // Prepare transaction and generate token
     const tokenNumber = generateTokenNumber();
 
-    // Save transaction
     const totalAmountInput = document.getElementById('totalAmount');
     const totalInWordsInput = document.getElementById('totalInWords');
-    const totalAmount = totalAmountInput.value.replace('£', '').replace(/,/g, '');
+    const totalAmount = totalAmountInput.value.replace('₹', '').replace(/,/g, '');
 
     const form = document.getElementById('cashDepositForm') || 
                  document.getElementById('chequeDepositForm') ||
@@ -187,17 +186,42 @@ function handleFinalSave() {
         transactionType = form.id.includes('Cash') ? 'Cash Withdrawal' : 'Cheque Withdrawal';
     }
 
+    const nameVal = (form.querySelector('#name') && form.querySelector('#name').value) || getCurrentUsername();
+    const accountVal = (form.querySelector('#accountNumber') && form.querySelector('#accountNumber').value) || '1234567890';
+    const ifscVal = (form.querySelector('#ifsc') && form.querySelector('#ifsc').value) || 'IFSCABC1234';
+    const branchVal = (form.querySelector('#branch') && form.querySelector('#branch').value) || '';
+    const mobileVal = (form.querySelector('#mobile') && form.querySelector('#mobile').value) || '';
+    const emailVal = (form.querySelector('#email') && form.querySelector('#email').value) || '';
+
+    // Collect per-denomination note counts when present (for cash forms)
+    let notesCounts = {};
+    const denomInputs = form.querySelectorAll('.currency-input');
+    if (denomInputs && denomInputs.length) {
+        denomInputs.forEach(inp => {
+            const denom = parseInt(inp.getAttribute('data-value')) || 0;
+            const qty = parseInt(inp.value) || 0;
+            if (denom > 0) notesCounts[denom] = qty;
+        });
+    }
+
     const transaction = {
         type: transactionType,
         amount: totalAmount,
         amountInWords: totalInWordsInput.value,
         branchCode: branchCodeInput.value,
-        status: 'Completed'
+        token: tokenNumber,
+        name: nameVal,
+        account: accountVal,
+        ifsc: ifscVal,
+        branch: branchVal,
+        mobile: mobileVal,
+        email: emailVal,
+        notesCounts: notesCounts
     };
 
     saveTransaction(transaction);
 
-    // Show token popup
+    // Show token popup with sequential token
     showTokenPopup(tokenNumber);
 }
 
@@ -256,27 +280,27 @@ function enableEdit() {
 }
 
 // Helper functions (from app.js, included for redundancy)
-function generateTokenNumber() {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    return 'NW' + timestamp.toString().slice(-6) + random.toString().padStart(4, '0');
-}
-
 function saveTransaction(transaction) {
     let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-    transaction.id = generateTokenNumber();
+    // Respect token if provided by caller
+    const token = transaction.token || generateTokenNumber();
+    transaction.token = token;
+    transaction.id = token + '-' + Date.now();
     transaction.timestamp = new Date().toLocaleString();
+    // ISO date for filtering in audits (YYYY-MM-DD)
+    transaction.date = new Date().toISOString().slice(0,10);
+    transaction.status = transaction.status || 'Pending';
     transactions.push(transaction);
     localStorage.setItem('transactions', JSON.stringify(transactions));
     return transaction.id;
 }
 
 function formatCurrency(amount) {
-    return '£' + parseInt(amount).toLocaleString('en-IN');
+    return '₹' + parseInt(amount).toLocaleString('en-IN');
 }
 
 function numberToWords(num) {
-    if (num === 0) return 'Zero Pounds Only';
+    if (num === 0) return 'Zero Rupees Only';
 
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -309,14 +333,10 @@ function numberToWords(num) {
     let words = '';
     let groupIndex = 0;
     
-    // Handle in groups of 2 digits for British system (except first group which is 3 digits)
     let groups = [];
     if (num >= 1000) {
-        // Get the last 3 digits
         groups.push(num % 1000);
         num = Math.floor(num / 1000);
-        
-        // Get remaining groups of 2 digits
         while (num > 0) {
             groups.push(num % 100);
             num = Math.floor(num / 100);
@@ -325,7 +345,6 @@ function numberToWords(num) {
         groups.push(num);
     }
 
-    // Process groups in reverse order
     for (let i = groups.length - 1; i >= 0; i--) {
         if (groups[i] !== 0) {
             let groupWords = convertGroup(groups[i]);
@@ -342,5 +361,5 @@ function numberToWords(num) {
         }
     }
 
-    return (words.trim() || 'Zero') + ' Pounds Only';
+    return (words.trim() || 'Zero') + ' Rupees Only';
 }
