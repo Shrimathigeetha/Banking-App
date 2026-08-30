@@ -180,10 +180,12 @@ function handleFinalSave() {
                  document.getElementById('chequeWithdrawForm');
 
     let transactionType = 'Transfer';
-    if (form.id.includes('Deposit')) {
-        transactionType = form.id.includes('Cash') ? 'Cash Deposit' : 'Cheque Deposit';
+    // Use case-insensitive checks for form id to correctly detect Cash vs Cheque
+    const fid = (form.id || '').toLowerCase();
+    if (fid.includes('deposit')) {
+        transactionType = fid.includes('cash') ? 'Cash Deposit' : 'Cheque Deposit';
     } else {
-        transactionType = form.id.includes('Cash') ? 'Cash Withdrawal' : 'Cheque Withdrawal';
+        transactionType = fid.includes('cash') ? 'Cash Withdrawal' : 'Cheque Withdrawal';
     }
 
     const nameVal = (form.querySelector('#name') && form.querySelector('#name').value) || getCurrentUsername();
