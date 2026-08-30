@@ -180,12 +180,31 @@ function handleFinalSave() {
                  document.getElementById('chequeWithdrawForm');
 
     let transactionType = 'Transfer';
-    // Use case-insensitive checks for form id to correctly detect Cash vs Cheque
+    // Prefer detecting by actual inputs: if currency inputs have counts treat as Cash,
+    // if cheque amount present treat as Cheque. Fall back to case-insensitive form id.
+    const denomInputsPresent = form.querySelectorAll('.currency-input');
+    let denomTotalCount = 0;
+    if (denomInputsPresent && denomInputsPresent.length) {
+        denomInputsPresent.forEach(inp => { denomTotalCount += parseInt(inp.value) || 0; });
+    }
+
+    const chequeAmtInput = form.querySelector('#chequeAmount');
+    const chequeAmtValue = chequeAmtInput ? (parseInt(chequeAmtInput.value) || 0) : 0;
+
     const fid = (form.id || '').toLowerCase();
-    if (fid.includes('deposit')) {
-        transactionType = fid.includes('cash') ? 'Cash Deposit' : 'Cheque Deposit';
+    const isDeposit = fid.includes('deposit');
+
+    if (denomTotalCount > 0) {
+        transactionType = isDeposit ? 'Cash Deposit' : 'Cash Withdrawal';
+    } else if (chequeAmtValue > 0) {
+        transactionType = isDeposit ? 'Cheque Deposit' : 'Cheque Withdrawal';
     } else {
-        transactionType = fid.includes('cash') ? 'Cash Withdrawal' : 'Cheque Withdrawal';
+        // fallback to form id
+        if (isDeposit) {
+            transactionType = fid.includes('cash') ? 'Cash Deposit' : 'Cheque Deposit';
+        } else {
+            transactionType = fid.includes('cash') ? 'Cash Withdrawal' : 'Cheque Withdrawal';
+        }
     }
 
     const nameVal = (form.querySelector('#name') && form.querySelector('#name').value) || getCurrentUsername();
